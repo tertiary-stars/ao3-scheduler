@@ -1,0 +1,14 @@
+# Ignore virtual environments
+venv/
+ao3_scheduler/  # If using Conda
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+
+# Ignore config & session files
+config.json
+ao3_session.json
+
+# Ignore VSCode settings (optional)
+.vscode/
