@@ -1,0 +1,29 @@
+# Use official Node.js image with Alpine
+FROM node:20-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files first to leverage Docker cache
+COPY frontend/package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy all frontend files
+COPY frontend/ ./
+
+# Install Tailwind CSS and dependencies
+RUN npm install -D tailwindcss postcss autoprefixer
+
+# Initialize Tailwind CSS if config files don't exist
+RUN npx tailwindcss init -p --yes || true
+
+# Build the project (if needed)
+RUN npm run build
+
+# Expose the frontend port
+EXPOSE 3000
+
+# Start the development server
+CMD ["npm", "run", "dev"]
