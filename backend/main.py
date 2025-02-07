@@ -9,9 +9,14 @@ from database import SessionLocal, ScheduledFic
 from datetime import datetime
 import pytz
 
+from scheduler import start_scheduler
+
+
 load_dotenv()  # Load environment variables
 
 app = FastAPI()
+
+LOCAL_TZ = pytz.timezone("Europe/Istanbul")
 
 def get_db():
     db = SessionLocal()
@@ -49,40 +54,50 @@ def check_session():
 @app.post("/schedule-fic")
 def schedule_fic(
     title: str = Form(...),
-    fandoms: str = Form(...),  # Comma-separated
+    fandoms: str = Form(...),
     rating: str = Form(...),
     warnings: str = Form(...),
     category: str = Form(...),
     language: str = Form(...),
     summary: str = Form(...),
     content: str = Form(...),
-    tags: str = Form(None),  # Optional
-    relationships: str = Form(None),  # Optional
-    characters: str = Form(None),  # Optional
-    author_notes: str = Form(None),  # Optional
-    end_notes: str = Form(None),  # Optional
+    tags: str = Form(None),
+    relationships: str = Form(None),
+    characters: str = Form(None),
+    author_notes: str = Form(None),
+    end_notes: str = Form(None),
     is_complete: bool = Form(False),
-    scheduled_time: str = Form(...),  # Format: "YYYY-MM-DD HH:MM"
+    scheduled_time: str = Form(...),  # Format: "YYYY-MM-DD HH:MM" (local time)
     db: Session = Depends(get_db)
 ):
-    """Schedule a fic to be posted at a future date with all AO3 required fields."""
+    """Schedule a fic to be posted at a future date (automatically converts local time to UTC)."""
     try:
-        # Convert string to datetime (assuming UTC)
-        scheduled_dt = datetime.strptime(scheduled_time, "%Y-%m-%d %H:%M").replace(tzinfo=pytz.UTC)
+        # Convert string to datetime in local timezone
+        local_dt = LOCAL_TZ.localize(datetime.strptime(scheduled_time, "%Y-%m-%d %H:%M"))
+
+        # Convert to UTC
+        scheduled_utc = local_dt.astimezone(pytz.UTC)
 
         new_fic = ScheduledFic(
             title=title, fandoms=fandoms, rating=rating, warnings=warnings,
             category=category, language=language, summary=summary,
             content=content, tags=tags, relationships=relationships,
             characters=characters, author_notes=author_notes, end_notes=end_notes,
-            is_complete=is_complete, scheduled_time=scheduled_dt
+            is_complete=is_complete, scheduled_time=scheduled_utc
         )
         db.add(new_fic)
         db.commit()
-        return {"status": "success", "message": "Fic scheduled successfully!"}
+
+        return {
+            "status": "success",
+            "message": "Fic scheduled successfully!",
+            "scheduled_time_utc": scheduled_utc.strftime("%Y-%m-%d %H:%M:%S UTC")
+        }
 
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+start_scheduler()
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
