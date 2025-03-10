@@ -1,29 +1,10 @@
 version: "3.8"
-
 services:
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./backend:/app
-    environment:
-      - DATABASE_URL=sqlite:///app/database.db
-
-
   frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile.frontend
+    build: .
     ports:
       - "3000:3000"
-  volumes:
-    - ./frontend:/app
-    - /app/node_modules  # Preserve container node_modules
-  stdin_open: true
-  tty: true
-  depends_on:
-    - backend
-
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: ["npm", "run", "dev"]
