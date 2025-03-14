@@ -3,3 +3,6 @@ uvicorn
 pydantic
 playwright
 requests
+bs4
+dotenv
+sqlalchemy

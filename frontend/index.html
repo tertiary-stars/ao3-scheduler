@@ -1,0 +1,50 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>scheduler login</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="login-box">
+            <div class="inner-box">
+                <h1>Login</h1>
+                <p> Please use your <strong><em><u>AO3 account</u></em></strong> credits to login.</p>
+                <form action="backend/login.php" form id="loginForm" method="post">
+                    <div class="textbox">
+                        <input type="text" name="username" placeholder="Username" required>
+                    </div>
+                    <div class="textbox">
+                        <input type="password" name="password" placeholder="Password" required>
+                    </div>
+                    <input type="submit" class="btn" value="Login">
+                </form>
+            </div>
+        </div>
+    </div>
+<script>
+    document.getElementById("loginForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
+    const formData = new FormData(this);
+
+    try {
+        const response = await fetch("http://localhost:8000/login.php", {
+            method: "POST",
+            body: formData
+        });
+
+        const text = await response.text(); // ✅ Get raw response
+        console.log("Raw Response:", text);
+
+        const data = JSON.parse(text); // ✅ Parse JSON
+        document.getElementById("result").innerText = data.message;
+    } catch (error) {
+        console.error("Fetch Error:", error);
+        document.getElementById("result").innerText = "An error occurred during login.";
+    }
+});
+</script>
+</body>
+</html>
+
